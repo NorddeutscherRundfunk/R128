@@ -2,7 +2,7 @@
 #AutoIt3Wrapper_Icon=Icons\peakmeter.ico
 #AutoIt3Wrapper_Res_Comment=Measure loudness with ffmpeg according to R128.
 #AutoIt3Wrapper_Res_Description=Measure loudness with ffmpeg according to R128.
-#AutoIt3Wrapper_Res_Fileversion=1.0.0.5
+#AutoIt3Wrapper_Res_Fileversion=1.0.0.8
 #AutoIt3Wrapper_Res_Fileversion_AutoIncrement=y
 #AutoIt3Wrapper_Res_CompanyName=Norddeutscher Rundfunk
 #AutoIt3Wrapper_Res_LegalCopyright=Conrad Zelck
@@ -22,6 +22,7 @@
 #include <StaticConstants.au3>
 #include <TrayCox.au3> ; source: https://github.com/SimpelMe/TrayCox - not needed for functionality
 
+FileDelete(@TempDir & '\output.wav')
 FileInstall('K:\ffmpeg\bin\ffmpeg.exe', @TempDir & "\ffmpeg.exe", $FC_OVERWRITE)
 Local $sPathFFmpeg = @TempDir & "\"
 Global $g_sStdErrAll
@@ -104,12 +105,16 @@ Local $sCommand = '-i "' & $sFile & '" -filter_complex "[0:' & $iTrackL & '][0:'
 _runFFmpeg('ffmpeg ' & $sCommand, $sPathFFmpeg, 1)
 GUICtrlSetData($Progress1, 100) ; if ffmpeg is done than set progress to 100 - sometimes last StderrRead with 100 is missed
 
-$sCommand = '-i "' & @TempDir & '\output.wav" -filter_complex ebur128=framelog=verbose:peak=true -f null -'
-_runFFmpeg('ffmpeg ' & $sCommand, $sPathFFmpeg, 2)
-GUICtrlSetData($Progress2, 100) ; if ffmpeg is done than set progress to 100 - sometimes last StderrRead with 100 is missed
+If Not FileExists(@TempDir & '\output.wav') Then ; error
+	GUICtrlSetData($Edit, "Error: Could not extract audio.")
+Else
+	$sCommand = '-i "' & @TempDir & '\output.wav" -filter_complex ebur128=framelog=verbose:peak=true -f null -'
+	_runFFmpeg('ffmpeg ' & $sCommand, $sPathFFmpeg, 2)
+	GUICtrlSetData($Progress2, 100) ; if ffmpeg is done than set progress to 100 - sometimes last StderrRead with 100 is missed
 
-GUICtrlSetData($Edit, _GetR128($g_sStdErrAll))
-GUICtrlSetState($idButton, $GUI_ENABLE)
+	GUICtrlSetData($Edit, _GetR128($g_sStdErrAll))
+	GUICtrlSetState($idButton, $GUI_ENABLE)
+EndIf
 WinActivate("R128","")
 
 While 1
@@ -171,9 +176,9 @@ Func _GetTime($sStdErr)
 EndFunc   ;==>_GetTime
 
 Func _GetR128($sStdErr)
-    If Not StringInStr($sStdErr, "Integrated loudness:") Then Return SetError(1, 0, 0)
+    If Not StringInStr($sStdErr, "Integrated loudness:") Then Return SetError(1, 0, "Fehler")
     Local $aRegExp = StringRegExp($sStdErr, "(?isU)Integrated loudness:.*(I:.*LUFS).*(LRA:.*LU).*\h\h(Peak:.*dBFS)", 3)
-    If @error Or Not IsArray($aRegExp) Then Return SetError(2, 0, 0)
+    If @error Or Not IsArray($aRegExp) Then Return SetError(2, 0, "Fehler")
 	Local $iUbound = UBound($aRegExp)
     Return $aRegExp[$iUbound -3] & @CRLF & $aRegExp[$iUbound - 2] & @CRLF & $aRegExp[$iUbound - 1]
 EndFunc   ;==>_GetR128
