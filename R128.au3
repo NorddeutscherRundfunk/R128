@@ -2,7 +2,7 @@
 #AutoIt3Wrapper_Icon=Icons\peakmeter.ico
 #AutoIt3Wrapper_Res_Comment=Measure loudness with ffmpeg according to R128.
 #AutoIt3Wrapper_Res_Description=Measure loudness with ffmpeg according to R128.
-#AutoIt3Wrapper_Res_Fileversion=1.1.0.12
+#AutoIt3Wrapper_Res_Fileversion=1.1.0.13
 #AutoIt3Wrapper_Res_Fileversion_AutoIncrement=y
 #AutoIt3Wrapper_Res_CompanyName=Norddeutscher Rundfunk
 #AutoIt3Wrapper_Res_LegalCopyright=Conrad Zelck
@@ -92,8 +92,9 @@ If @extended > 0 Then
 	$iMonoCount = @extended
 	If $iMonoCount = $aChannels[0] Then
 		$iLayout = $eMONO
+		If Mod($iMonoCount, 2) <> 0 Then $iLayout = 0 ; uneven counter
 	EndIf
-	ConsoleWrite("Monofiles: " & @extended & @CRLF)
+	ConsoleWrite("Monofiles: " & $iMonoCount & @CRLF)
 EndIf
 StringReplace($sChannels, "2", "2") ; just to get the count
 If @extended > 0 Then
@@ -101,7 +102,7 @@ If @extended > 0 Then
 	If $iStereoCount = $aChannels[0] Then
 		$iLayout = $eSTEREO
 	EndIf
-	ConsoleWrite("Stereofiles: " & @extended & @CRLF)
+	ConsoleWrite("Stereofiles: " & $iStereoCount & @CRLF)
 EndIf
 Local $iMeasuringPairs = 0
 Switch $iLayout
@@ -113,7 +114,7 @@ Switch $iLayout
 		ConsoleWrite("All STEREO" & @CRLF)
 	Case Else
 		ConsoleWrite("UNDEFINED Layout" & @CRLF)
-		MsgBox($MB_TOPMOST, "Error", "Track layout is undefined." & @CRLF & "Application exits.")
+		MsgBox($MB_TOPMOST, "Error", "Track layout is undefined." & @CRLF & @CRLF & "Application exits.")
 		Exit
 EndSwitch
 ConsoleWrite("Pairs for measuring: " & $iMeasuringPairs & @CRLF)
