@@ -2,7 +2,7 @@
 #AutoIt3Wrapper_Icon=Icons\peakmeter.ico
 #AutoIt3Wrapper_Res_Comment=Measure loudness with ffmpeg according to R128.
 #AutoIt3Wrapper_Res_Description=Measure loudness with ffmpeg according to R128.
-#AutoIt3Wrapper_Res_Fileversion=1.0.0.8
+#AutoIt3Wrapper_Res_Fileversion=1.1.0.9
 #AutoIt3Wrapper_Res_Fileversion_AutoIncrement=y
 #AutoIt3Wrapper_Res_CompanyName=Norddeutscher Rundfunk
 #AutoIt3Wrapper_Res_LegalCopyright=Conrad Zelck
@@ -15,44 +15,125 @@
 #Au3Stripper_Parameters=/mo
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 #include <AutoItConstants.au3>
+#include <ButtonConstants.au3>
 #include <Date.au3>
 #include <FileConstants.au3>
 #include <GUIConstantsEx.au3>
 #include <MsgBoxConstants.au3>
 #include <StaticConstants.au3>
+#include <StringConstants.au3>
 #include <TrayCox.au3> ; source: https://github.com/SimpelMe/TrayCox - not needed for functionality
 
 FileDelete(@TempDir & '\output.wav')
 FileInstall('K:\ffmpeg\bin\ffmpeg.exe', @TempDir & "\ffmpeg.exe", $FC_OVERWRITE)
 Local $sPathFFmpeg = @TempDir & "\"
+FileInstall('K:\ffmpeg\bin\ffprobe.exe', @TempDir & "\ffprobe.exe", $FC_OVERWRITE)
+Local $sPathFFprobe = @TempDir & "\"
 Global $g_sStdErrAll
-Local $bSendTo = False
+
+; Testfiles
+;~ Local $sFile = "M:\MFT\MFT-OUT\43051753.mp4" ; 4x Stereo
+;~ Local $sFile = "M:\MFT\MFT-OUT\43051753_Logo.mp4" ; 2x Stereo
+;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\zelckc\A10829_081_Test-TNB-------_E_160926_TESTX_SVT_B.mxf" ; 8x Mono
+;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\zelckc\M83_We_own_the_sky.wav" ; 1x Stereo
+;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\seidemann_social\ES_Backstabbers Waltz - Etienne Roussel.mp3"
+;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\Gitta\SoundFX\Short Skid Whoosh - kurz.aif"
+;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\zelckc\A10829_ohne-Ton.mxf" ; NO AUDIO
 
 Local $sFile
-;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\zelckc\Test.mxf"
-;~ Local $sFile = "M:\Ue_Schnitt_Ton\ton_fertig\G59031_005_Film-Tip-Wie-vi_E_190612_DAS18_M02_B.mxf"
-;~ Local $sFile = "M:\Ue_Schnitt_Ton\ton_fertig\G55969_002_Die-wunderbare-_S_190610_E1440_MS1_B.mxf"
-
 If FileExists($cmdlineraw) Then
 	$sFile = $cmdlineraw
-	$bSendTo = True
 Else
 	$sFile = FileOpenDialog("Choose a file", "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", "Alle (*.*)", $FD_FILEMUSTEXIST)
 	If @error Then
-		MsgBox($MB_TOPMOST, "Error", "File selection failed" & @CRLF & @CRLF & "Program exits.")
+		MsgBox($MB_TOPMOST, "Error", "File selection failed." & @CRLF & @CRLF & "Application exits.")
 		Exit
 	EndIf
 EndIf
 
+; how many video streams to increase stream counter
+Local $sCommand = '-i "' & $sFile & '" -v 0 -show_entries stream=codec_type -of default=nw=1:nk=1'
+Local $sCodecs = _runFFprobe('ffprobe ' & $sCommand, $sPathFFprobe)
+ConsoleWrite("Codecs: " & $sCodecs & @CRLF)
+StringReplace($sCodecs, "video", "video") ; just to get the count
+Local $iCounterVideo = Number(@extended)
+ConsoleWrite("Counter video: " & $iCounterVideo & @CRLF)
+
+; is audio inside?
+StringReplace($sCodecs, "audio", "audio") ; just to get the count
+If @extended = 0 Then
+	MsgBox($MB_TOPMOST, "Error", "No audio channels found.")
+	Exit
+EndIf
+
+; channel layout for all audio streams
+$sCommand = '-i "' & $sFile & '" -v 0 -select_streams a -show_entries stream=channels -of default=nw=1:nk=1'
+Local $sChannels = _runFFprobe('ffprobe ' & $sCommand, $sPathFFprobe)
+Local $aChannels = StringSplit($sChannels, @CRLF, $STR_ENTIRESPLIT)
+If Not IsArray($aChannels) Then
+	MsgBox($MB_TOPMOST, "Error", "No audio channels found.")
+	Exit
+EndIf
+For $i = 0 To $aChannels[0]
+	$aChannels[$i] = Number($aChannels[$i])
+Next
+ConsoleWrite("Streams: " & $aChannels[0] & @CRLF)
+For $i = 1 To $aChannels[0]
+	ConsoleWrite("Channels: " & $aChannels[$i] & @CRLF)
+Next
+
+; are all streams mono or stereo
+Local Enum $eMONO = 1, $eSTEREO
+Local $iMonoCount = 0, $iStereoCount = 0
+Local $iLayout = 0
+StringReplace($sChannels, "1", "1") ; just to get the count
+If @extended > 0 Then
+	$iMonoCount = @extended
+	If $iMonoCount = $aChannels[0] Then
+		$iLayout = $eMONO
+	EndIf
+	ConsoleWrite("Monofiles: " & @extended & @CRLF)
+EndIf
+StringReplace($sChannels, "2", "2") ; just to get the count
+If @extended > 0 Then
+	$iStereoCount = @extended
+	If $iStereoCount = $aChannels[0] Then
+		$iLayout = $eSTEREO
+	EndIf
+	ConsoleWrite("Stereofiles: " & @extended & @CRLF)
+EndIf
+Local $iMeasuringPairs = 0
+Switch $iLayout
+	Case $eMONO
+		$iMeasuringPairs = $iMonoCount / 2
+		ConsoleWrite("All MONO" & @CRLF)
+	Case $eSTEREO
+		$iMeasuringPairs = $iStereoCount
+		ConsoleWrite("All STEREO" & @CRLF)
+	Case Else
+		ConsoleWrite("UNDEFINED Layout" & @CRLF)
+		MsgBox($MB_TOPMOST, "Error", "Track layout is undefined." & @CRLF & "Application exits.")
+		Exit
+EndSwitch
+ConsoleWrite("Pairs for measuring: " & $iMeasuringPairs & @CRLF)
+Local $bShowTrackSelection = True
+If $iMeasuringPairs = 1 Then $bShowTrackSelection = False ; then there is no choice of tracks
+
 Local $iTrackL = 1
 Local $iTrackR = 2
-If Not $bSendTo Then
+If $bShowTrackSelection Then
 	GUICreate("Tracks", 300, 50)
 	Local $idTracks12 = GUICtrlCreateRadio("1+2", 10, 10, 50, 30)
 	GUICtrlSetState(-1, $GUI_CHECKED)
 	Local $idTracks34 = GUICtrlCreateRadio("3+4", 60, 10, 50, 30)
 	Local $idTracks56 = GUICtrlCreateRadio("5+6", 110, 10, 50, 30)
 	Local $idTracks78 = GUICtrlCreateRadio("7+8", 160, 10, 50, 30)
+	If $iMeasuringPairs < 3 Then
+		GUICtrlSetState($idTracks56, $GUI_HIDE)
+		GUICtrlSetState($idTracks78, $GUI_HIDE)
+	ElseIf $iMeasuringPairs < 4 Then
+		GUICtrlSetState($idTracks78, $GUI_HIDE)
+	EndIf
 	Local $idButtonOK = GUICtrlCreateButton("OK", 210, 10, 80, 30, $BS_DEFPUSHBUTTON)
 	GUISetState(@SW_SHOW)
 
@@ -101,7 +182,13 @@ GUISetState(@SW_SHOW)
 
 Global $hTimerStart = TimerInit()
 
-Local $sCommand = '-i "' & $sFile & '" -filter_complex "[0:' & $iTrackL & '][0:' & $iTrackR & '] amerge" -c:a pcm_s24le -y ' & @TempDir & '\output.wav'
+Switch $iLayout
+	Case $eMONO
+		$sCommand = '-i "' & $sFile & '" -filter_complex "[0:' & $iTrackL - 1 + $iCounterVideo & '][0:' & $iTrackR - 1 + $iCounterVideo & '] amerge" -c:a pcm_s24le -y ' & @TempDir & '\output.wav'
+	Case $eSTEREO
+		$sCommand = '-i "' & $sFile & '" -map 0:' & $iTrackR / 2 - 1 + $iCounterVideo & ' -c:a pcm_s24le -y ' & @TempDir & '\output.wav'
+EndSwitch
+
 _runFFmpeg('ffmpeg ' & $sCommand, $sPathFFmpeg, 1)
 GUICtrlSetData($Progress1, 100) ; if ffmpeg is done than set progress to 100 - sometimes last StderrRead with 100 is missed
 
@@ -127,7 +214,7 @@ While 1
 WEnd
 Exit
 
-Func _runFFmpeg($command , $wd, $iProgress)
+Func _runFFmpeg($command, $wd, $iProgress)
 	Local $hPid = Run('"' & @ComSpec & '" /c ' & $command, $wd, @SW_HIDE, $STDOUT_CHILD + $STDERR_CHILD)
 	Local $sStdErr, $sTimer
 	Local $iTicksDuration = 0, $iTicksTime = 0, $iTimer
@@ -135,6 +222,7 @@ Func _runFFmpeg($command , $wd, $iProgress)
 		Sleep(500)
 		$sStdErr = StderrRead($hPid)
 		If @error Then ExitLoop
+;~ 		ConsoleWrite("FFmpeg: " & $sStdErr & @CRLF)
 		$g_sStdErrAll &= $sStdErr
 		If StringLen($sStdErr) > 0 Then
 			If Not $iTicksDuration Then $iTicksDuration = _GetDuration($sStdErr)
@@ -153,6 +241,20 @@ Func _runFFmpeg($command , $wd, $iProgress)
 			GUICtrlSetData($g_hLabelRunningTime, $sTimer)
 		EndIf
 	WEnd
+EndFunc
+
+Func _runFFprobe($command, $wd)
+	Local $sStdErrAll
+	Local $sStdErr
+	Local $hPid = Run('"' & @ComSpec & '" /c ' & $command, $wd, @SW_HIDE, $STDOUT_CHILD + $STDERR_CHILD)
+	While 1
+		Sleep(50)
+		$sStdErr = StdoutRead($hPid)
+		If @error Then ExitLoop
+		$sStdErrAll &= $sStdErr
+	WEnd
+	$sStdErrAll = StringRegExpReplace($sStdErrAll, "\R$", "") ; delete last new line sequence
+	Return $sStdErrAll
 EndFunc
 
 Func _GetDuration($sStdErr)
