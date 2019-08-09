@@ -2,7 +2,7 @@
 #AutoIt3Wrapper_Icon=Icons\peakmeter.ico
 #AutoIt3Wrapper_Res_Comment=Measure loudness with ffmpeg according to R128.
 #AutoIt3Wrapper_Res_Description=Measure loudness with ffmpeg according to R128.
-#AutoIt3Wrapper_Res_Fileversion=1.1.0.10
+#AutoIt3Wrapper_Res_Fileversion=1.1.0.12
 #AutoIt3Wrapper_Res_Fileversion_AutoIncrement=y
 #AutoIt3Wrapper_Res_CompanyName=Norddeutscher Rundfunk
 #AutoIt3Wrapper_Res_LegalCopyright=Conrad Zelck
@@ -40,6 +40,7 @@ Global $g_sStdErrAll
 ;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\Gitta\SoundFX\Short Skid Whoosh - kurz.aif"
 ;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\zelckc\A10829_ohne-Ton.mxf" ; NO AUDIO
 
+$cmdlineraw = StringReplace($cmdlineraw, '"', '') ; if there are spaces in filename $cmdlineraw is adding leading and trailing "
 Local $sFile
 If FileExists($cmdlineraw) Then
 	$sFile = $cmdlineraw
