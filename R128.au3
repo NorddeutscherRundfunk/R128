@@ -43,6 +43,8 @@ Else
 	EndIf
 EndIf
 
+SplashTextOn("Be patient", "R128 is analysing file ...", 300, 50)
+
 ; how many video streams to increase stream counter
 Local $sCommand = '-i "' & $sFile & '" -v 0 -show_entries stream=codec_type -of default=nw=1:nk=1'
 Local $sCodecs = _runFFprobe('ffprobe ' & $sCommand, $sPathFFprobe)
@@ -54,6 +56,7 @@ ConsoleWrite("Counter video: " & $iCounterVideo & @CRLF)
 ; is audio inside?
 StringReplace($sCodecs, "audio", "audio") ; just to get the count
 If @extended = 0 Then
+	SplashOff()
 	MsgBox($MB_TOPMOST, "Error", "No audio channels found.")
 	Exit
 EndIf
@@ -61,6 +64,7 @@ EndIf
 ; channel layout for all audio streams
 $sCommand = '-i "' & $sFile & '" -v 0 -select_streams a -show_entries stream=channels -of default=nw=1:nk=1'
 Local $sChannels = _runFFprobe('ffprobe ' & $sCommand, $sPathFFprobe)
+SplashOff()
 Local $aChannels = StringSplit($sChannels, @CRLF, $STR_ENTIRESPLIT)
 If Not IsArray($aChannels) Then
 	MsgBox($MB_TOPMOST, "Error", "No audio channels found.")
