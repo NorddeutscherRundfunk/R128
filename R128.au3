@@ -31,15 +31,6 @@ FileInstall('K:\ffmpeg\bin\ffprobe.exe', @TempDir & "\ffprobe.exe", $FC_OVERWRIT
 Local $sPathFFprobe = @TempDir & "\"
 Global $g_sStdErrAll
 
-; Testfiles
-;~ Local $sFile = "M:\MFT\MFT-OUT\43051753.mp4" ; 4x Stereo
-;~ Local $sFile = "M:\MFT\MFT-OUT\43051753_Logo.mp4" ; 2x Stereo
-;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\zelckc\A10829_081_Test-TNB-------_E_160926_TESTX_SVT_B.mxf" ; 8x Mono
-;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\zelckc\M83_We_own_the_sky.wav" ; 1x Stereo
-;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\seidemann_social\ES_Backstabbers Waltz - Etienne Roussel.mp3"
-;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\Gitta\SoundFX\Short Skid Whoosh - kurz.aif"
-;~ Local $sFile = "T:\Maus\VPN\AUDIO~4T~\zelckc\A10829_ohne-Ton.mxf" ; NO AUDIO
-
 $cmdlineraw = StringReplace($cmdlineraw, '"', '') ; if there are spaces in filename $cmdlineraw is adding leading and trailing "
 Local $sFile
 If FileExists($cmdlineraw) Then
@@ -224,7 +215,6 @@ Func _runFFmpeg($command, $wd, $iProgress)
 		Sleep(500)
 		$sStdErr = StderrRead($hPid)
 		If @error Then ExitLoop
-;~ 		ConsoleWrite("FFmpeg: " & $sStdErr & @CRLF)
 		$g_sStdErrAll &= $sStdErr
 		If StringLen($sStdErr) > 0 Then
 			If Not $iTicksDuration Then $iTicksDuration = _GetDuration($sStdErr)
