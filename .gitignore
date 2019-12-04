@@ -1,0 +1,8 @@
+#Ignore
+*.exe
+*.txt
+*_stripped.au3
+__Stripped
+BAK
+
+#Except - example: !/ReleaseNotes_Eingabe.txt
