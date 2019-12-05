@@ -19,3 +19,7 @@ Then it measures this wave file. If ready you can copy the result to the clipboa
 
 `Output.wav` will stay at `%temp%` until overridden.
 So you can use the app as an audio extractor or audio converter too.
+
+As windows FFmpeg build is licensed under GPL and therefor incompatible with MIT license I can't offer a compiled release.  
+FFmpeg source can be found here: https://github.com/FFmpeg/FFmpeg  
+You can download FFmpeg build under: https://ffmpeg.zeranoe.com/build
