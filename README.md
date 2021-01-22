@@ -11,13 +11,13 @@ If there are more then one stereo or two mono tracks you get a popup to choose t
 
 ![select tracks](./images/select_tracks.png)
 
-The choosen tracks are first extracted to `%temp%` as `output.wav` in 24bit and 48kHz.
+The choosen tracks are first extracted to `%temp%` in 24bit and 48kHz.
 Progress is shown in the gui.
 Then it measures this wave file. If ready you can copy the result to the clipboard.
 
 ![GUI](./images/gui.png)
 
-`Output.wav` will stay at `%temp%` until overridden.
+Extracted wave file will stay at `%temp%`.
 So you can use the app as an audio extractor or audio converter too.
 
 As windows FFmpeg build is licensed under GPL and therefor incompatible with MIT license I can't offer a compiled release.  

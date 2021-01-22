@@ -24,7 +24,6 @@
 #include <StringConstants.au3>
 #include <TrayCox.au3> ; source: https://github.com/SimpelMe/TrayCox - not needed for functionality
 
-FileDelete(@TempDir & '\output.wav')
 FileInstall('K:\ffmpeg\bin\ffmpeg.exe', @TempDir & "\ffmpeg.exe", $FC_OVERWRITE)
 Local $sPathFFmpeg = @TempDir & "\"
 FileInstall('K:\ffmpeg\bin\ffprobe.exe', @TempDir & "\ffprobe.exe", $FC_OVERWRITE)
@@ -42,6 +41,7 @@ Else
 		Exit
 	EndIf
 EndIf
+Local $sOutputFileWithoutExtension = _StripFileExtension(_FileName($sFile))
 
 SplashTextOn("Be patient", "R128 is analysing file ...", 300, 50)
 
@@ -181,18 +181,18 @@ Global $hTimerStart = TimerInit()
 
 Switch $iLayout
 	Case $eMONO
-		$sCommand = '-i "' & $sFile & '" -filter_complex "[0:' & $iTrackL - 1 + $iCounterVideo & '][0:' & $iTrackR - 1 + $iCounterVideo & '] amerge" -c:a pcm_s24le -ar 48000 -y ' & @TempDir & '\output.wav'
+		$sCommand = '-i "' & $sFile & '" -filter_complex "[0:' & $iTrackL - 1 + $iCounterVideo & '][0:' & $iTrackR - 1 + $iCounterVideo & '] amerge" -c:a pcm_s24le -ar 48000 -y ' & @TempDir & '\' & $sOutputFileWithoutExtension & '.wav'
 	Case $eSTEREO
-		$sCommand = '-i "' & $sFile & '" -map 0:' & $iTrackR / 2 - 1 + $iCounterVideo & ' -c:a pcm_s24le -ar 48000 -y ' & @TempDir & '\output.wav'
+		$sCommand = '-i "' & $sFile & '" -map 0:' & $iTrackR / 2 - 1 + $iCounterVideo & ' -c:a pcm_s24le -ar 48000 -y ' & @TempDir & '\' & $sOutputFileWithoutExtension & '.wav'
 EndSwitch
 
 _runFFmpeg('ffmpeg ' & $sCommand, $sPathFFmpeg, 1)
 GUICtrlSetData($Progress1, 100) ; if ffmpeg is done than set progress to 100 - sometimes last StderrRead with 100 is missed
 
-If Not FileExists(@TempDir & '\output.wav') Then ; error
+If Not FileExists(@TempDir & '\' & $sOutputFileWithoutExtension & '.wav') Then ; error
 	GUICtrlSetData($Edit, "Error: Could not extract audio.")
 Else
-	$sCommand = '-i "' & @TempDir & '\output.wav" -filter_complex ebur128=framelog=verbose:peak=true -f null -'
+	$sCommand = '-i "' & @TempDir & '\' & $sOutputFileWithoutExtension & '.wav" -filter_complex ebur128=framelog=verbose:peak=true -f null -'
 	_runFFmpeg('ffmpeg ' & $sCommand, $sPathFFmpeg, 2)
 	GUICtrlSetData($Progress2, 100) ; if ffmpeg is done than set progress to 100 - sometimes last StderrRead with 100 is missed
 
@@ -284,6 +284,11 @@ EndFunc   ;==>_GetR128
 Func _FileName($sFullPath)
 	Local $iDelimiter = StringInStr($sFullPath, "\", 0, -1)
 	Return StringTrimLeft($sFullPath, $iDelimiter)
+EndFunc
+
+Func _StripFileExtension($sFile)
+	Local $iDelimiter = StringInStr($sFile, ".", 0, -1)
+	Return StringLeft($sFile, $iDelimiter - 1)
 EndFunc
 
 Func _Zeit($iMs, $bComfortView = True) ; from ms to a format: "12h 36m 56s 13f" (with special space between - ChrW(8239))
