@@ -168,11 +168,14 @@ Global $Progress1 = GUICtrlCreateProgress(10, 80, 580, 20)
 GUICtrlCreateLabel("Loudness Audio:", 10, 120, 580, 30)
 GUICtrlSetFont(-1, 12, 400, 0, "Courier New")
 Global $Progress2 = GUICtrlCreateProgress(10, 150, 580, 20)
-Global $Edit = GUICtrlCreateLabel("", 10, 200, 420, 90)
+Global $Edit = GUICtrlCreateLabel("", 10, 200, 260, 60)
 GUICtrlSetFont(-1, 14, 400, 0, "Courier New")
 Local $g_hLabelRunningTime = GUICtrlCreateLabel("", 440, 200, 150, 30, $SS_CENTER)
 GUICtrlSetFont(-1, 14, 400, 0, "Courier New")
-Local $idButton = GUICtrlCreateButton("Copy Data", 440, 230, 150, 30)
+Local $idButtonExport = GUICtrlCreateButton("Export Data", 280, 230, 150, 30)
+GUICtrlSetFont(-1, 12, 400, 0, "Courier New")
+GUICtrlSetState(-1, $GUI_DISABLE)
+Local $idButtonCopy = GUICtrlCreateButton("Copy Data", 440, 230, 150, 30)
 GUICtrlSetFont(-1, 12, 400, 0, "Courier New")
 GUICtrlSetState(-1, $GUI_DISABLE)
 GUISetState(@SW_SHOW)
@@ -197,7 +200,8 @@ Else
 	GUICtrlSetData($Progress2, 100) ; if ffmpeg is done than set progress to 100 - sometimes last StderrRead with 100 is missed
 
 	GUICtrlSetData($Edit, _GetR128($g_sStdErrAll))
-	GUICtrlSetState($idButton, $GUI_ENABLE)
+	GUICtrlSetState($idButtonExport, $GUI_ENABLE)
+	GUICtrlSetState($idButtonCopy, $GUI_ENABLE)
 EndIf
 WinActivate("R128","")
 
@@ -205,7 +209,9 @@ While 1
 	Switch GUIGetMsg()
 		Case $GUI_EVENT_CLOSE
 			ExitLoop
-		Case $idButton
+		Case $idButtonExport
+			FileWrite(@TempDir & '\' & $sOutputFileWithoutExtension & '.txt', $sFile & @CRLF & @CRLF & GUICtrlRead($Edit) & @CRLF & @CRLF & "measurement time: " & StringRegExpReplace(GUICtrlRead($g_hLabelRunningTime), "\W", ""))
+		Case $idButtonCopy
 			ClipPut($sFile & @CRLF & @CRLF & GUICtrlRead($Edit) & @CRLF & @CRLF & "measurement time: " & StringRegExpReplace(GUICtrlRead($g_hLabelRunningTime), "\W", ""))
 	EndSwitch
 WEnd

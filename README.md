@@ -13,7 +13,7 @@ If there are more then one stereo or two mono tracks you get a popup to choose t
 
 The choosen tracks are first extracted to `%temp%` in 24bit and 48kHz.
 Progress is shown in the gui.
-Then it measures this wave file. If ready you can copy the result to the clipboard.
+Then it measures this wave file. If ready you can copy the result to the clipboard or export the data as text file to `%temp%`.
 
 ![GUI](./images/gui.png)
 
