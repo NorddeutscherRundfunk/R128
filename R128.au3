@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Res_Comment=Measure loudness with ffmpeg according to R128.
 #AutoIt3Wrapper_Res_Description=Measure loudness with ffmpeg according to R128.
 #AutoIt3Wrapper_Res_Fileversion=1.1.0.14
-#AutoIt3Wrapper_Res_Fileversion_AutoIncrement=y
+#AutoIt3Wrapper_Res_Fileversion_AutoIncrement=p
 #AutoIt3Wrapper_Res_CompanyName=Norddeutscher Rundfunk
 #AutoIt3Wrapper_Res_LegalCopyright=Conrad Zelck
 #AutoIt3Wrapper_Res_SaveSource=y
