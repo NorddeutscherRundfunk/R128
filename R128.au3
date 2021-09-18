@@ -2,7 +2,7 @@
 #AutoIt3Wrapper_Icon=Icons\peakmeter.ico
 #AutoIt3Wrapper_Res_Comment=Measure loudness with ffmpeg according to R128.
 #AutoIt3Wrapper_Res_Description=Measure loudness with ffmpeg according to R128.
-#AutoIt3Wrapper_Res_Fileversion=1.1.0.15
+#AutoIt3Wrapper_Res_Fileversion=1.1.0.16
 #AutoIt3Wrapper_Res_Fileversion_AutoIncrement=p
 #AutoIt3Wrapper_Res_CompanyName=Norddeutscher Rundfunk
 #AutoIt3Wrapper_Res_LegalCopyright=Conrad Zelck
@@ -82,22 +82,32 @@ Next
 Local Enum $eMONO = 1, $eSTEREO
 Local $iMonoCount = 0, $iStereoCount = 0
 Local $iLayout = 0
-StringReplace($sChannels, "1", "1") ; just to get the count
-If @extended > 0 Then
-	$iMonoCount = @extended
-	If $iMonoCount = $aChannels[0] Then
-		$iLayout = $eMONO
-		If Mod($iMonoCount, 2) <> 0 Then $iLayout = 0 ; uneven counter
-	EndIf
+
+; only one number of channels returned
+If $aChannels[0] = 1 Then
+	ConsoleWrite("Only one number of channels returned: " & $aChannels[0] & @CRLF)
+	$iLayout = $eMONO
+	If Mod($iMonoCount, 2) <> 0 Then $iLayout = 0 ; uneven counter
+	$iMonoCount = $aChannels[1]
 	ConsoleWrite("Monofiles: " & $iMonoCount & @CRLF)
-EndIf
-StringReplace($sChannels, "2", "2") ; just to get the count
-If @extended > 0 Then
-	$iStereoCount = @extended
-	If $iStereoCount = $aChannels[0] Then
-		$iLayout = $eSTEREO
+Else ; hope all returned channels are the same
+	StringReplace($sChannels, "1", "1") ; just to get the count
+	If @extended > 0 Then
+		$iMonoCount = @extended
+		If $iMonoCount = $aChannels[0] Then
+			$iLayout = $eMONO
+			If Mod($iMonoCount, 2) <> 0 Then $iLayout = 0 ; uneven counter
+		EndIf
+		ConsoleWrite("Monofiles: " & $iMonoCount & @CRLF)
 	EndIf
-	ConsoleWrite("Stereofiles: " & $iStereoCount & @CRLF)
+	StringReplace($sChannels, "2", "2") ; just to get the count
+	If @extended > 0 Then
+		$iStereoCount = @extended
+		If $iStereoCount = $aChannels[0] Then
+			$iLayout = $eSTEREO
+		EndIf
+		ConsoleWrite("Stereofiles: " & $iStereoCount & @CRLF)
+	EndIf
 EndIf
 Local $iMeasuringPairs = 0
 Switch $iLayout
@@ -112,6 +122,7 @@ Switch $iLayout
 		MsgBox($MB_TOPMOST, "Error", "Track layout is undefined." & @CRLF & @CRLF & "Application exits.")
 		Exit
 EndSwitch
+
 ConsoleWrite("Pairs for measuring: " & $iMeasuringPairs & @CRLF)
 Local $bShowTrackSelection = True
 If $iMeasuringPairs = 1 Then $bShowTrackSelection = False ; then there is no choice of tracks
