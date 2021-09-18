@@ -79,17 +79,16 @@ For $i = 1 To $aChannels[0]
 Next
 
 ; are all streams mono or stereo
-Local Enum $eMONO = 1, $eSTEREO
+Local Enum $eMONO = 1, $eSTEREO, $eMULTI
 Local $iMonoCount = 0, $iStereoCount = 0
 Local $iLayout = 0
 
 ; only one number of channels returned
 If $aChannels[0] = 1 Then
 	ConsoleWrite("Only one number of channels returned: " & $aChannels[0] & @CRLF)
-	$iLayout = $eMONO
-	If Mod($iMonoCount, 2) <> 0 Then $iLayout = 0 ; uneven counter
-	$iMonoCount = $aChannels[1]
-	ConsoleWrite("Monofiles: " & $iMonoCount & @CRLF)
+	$iLayout = $eMULTI
+	If Mod($aChannels[1], 2) <> 0 Then $iLayout = 0 ; uneven counter
+	ConsoleWrite("Multichannel: " & $aChannels[1] & @CRLF)
 Else ; hope all returned channels are the same
 	StringReplace($sChannels, "1", "1") ; just to get the count
 	If @extended > 0 Then
@@ -117,6 +116,9 @@ Switch $iLayout
 	Case $eSTEREO
 		$iMeasuringPairs = $iStereoCount
 		ConsoleWrite("All STEREO" & @CRLF)
+	Case $eMULTI
+		$iMeasuringPairs = $aChannels[1] / 2
+		ConsoleWrite("MULTI" & @CRLF)
 	Case Else
 		ConsoleWrite("UNDEFINED Layout" & @CRLF)
 		MsgBox($MB_TOPMOST, "Error", "Track layout is undefined." & @CRLF & @CRLF & "Application exits.")
@@ -198,6 +200,8 @@ Switch $iLayout
 		$sCommand = '-i "' & $sFile & '" -filter_complex "[0:' & $iTrackL - 1 + $iCounterVideo & '][0:' & $iTrackR - 1 + $iCounterVideo & '] amerge" -c:a pcm_s24le -ar 48000 -y ' & @TempDir & '\' & $sOutputFileWithoutExtension & '.wav'
 	Case $eSTEREO
 		$sCommand = '-i "' & $sFile & '" -map 0:' & $iTrackR / 2 - 1 + $iCounterVideo & ' -c:a pcm_s24le -ar 48000 -y ' & @TempDir & '\' & $sOutputFileWithoutExtension & '.wav'
+	Case $eMULTI
+		$sCommand = '-i ' & $sFile & ' -af "pan=stereo|c0=c' & $iTrackL - 1 + $iCounterVideo & '|c1=c' & $iTrackR - 1 + $iCounterVideo & '" -c:a pcm_s24le -ar 48000 -y ' & @TempDir & '\' & $sOutputFileWithoutExtension & '.wav'
 EndSwitch
 
 _runFFmpeg('ffmpeg ' & $sCommand, $sPathFFmpeg, 1)
