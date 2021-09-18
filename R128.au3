@@ -194,6 +194,7 @@ GUICtrlSetState(-1, $GUI_DISABLE)
 GUISetState(@SW_SHOW)
 
 Global $hTimerStart = TimerInit()
+$sOutputFileWithoutExtension &= "_" & $iTrackL & "+" & $iTrackR
 
 Switch $iLayout
 	Case $eMONO
