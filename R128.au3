@@ -2,7 +2,7 @@
 #AutoIt3Wrapper_Icon=Icons\peakmeter.ico
 #AutoIt3Wrapper_Res_Comment=Measure loudness with ffmpeg according to R128.
 #AutoIt3Wrapper_Res_Description=Measure loudness with ffmpeg according to R128.
-#AutoIt3Wrapper_Res_Fileversion=1.1.0.16
+#AutoIt3Wrapper_Res_Fileversion=1.1.0.18
 #AutoIt3Wrapper_Res_Fileversion_AutoIncrement=p
 #AutoIt3Wrapper_Res_CompanyName=Norddeutscher Rundfunk
 #AutoIt3Wrapper_Res_LegalCopyright=Conrad Zelck
@@ -132,41 +132,23 @@ If $iMeasuringPairs = 1 Then $bShowTrackSelection = False ; then there is no cho
 Local $iTrackL = 1
 Local $iTrackR = 2
 If $bShowTrackSelection Then
-	GUICreate("Tracks", 300, 50)
-	Local $idTracks12 = GUICtrlCreateRadio("1+2", 10, 10, 50, 30)
-	GUICtrlSetState(-1, $GUI_CHECKED)
-	Local $idTracks34 = GUICtrlCreateRadio("3+4", 60, 10, 50, 30)
-	Local $idTracks56 = GUICtrlCreateRadio("5+6", 110, 10, 50, 30)
-	Local $idTracks78 = GUICtrlCreateRadio("7+8", 160, 10, 50, 30)
-	If $iMeasuringPairs < 3 Then
-		GUICtrlSetState($idTracks56, $GUI_HIDE)
-		GUICtrlSetState($idTracks78, $GUI_HIDE)
-	ElseIf $iMeasuringPairs < 4 Then
-		GUICtrlSetState($idTracks78, $GUI_HIDE)
-	EndIf
-	Local $idButtonOK = GUICtrlCreateButton("OK", 210, 10, 80, 30, $BS_DEFPUSHBUTTON)
+	Local $aTrackRadios[$iMeasuringPairs * 2]
+	GUICreate("Tracks", 100 + (50 * $iMeasuringPairs), 50)
+	GUISetOnEvent($GUI_EVENT_CLOSE, "_Exit")
+	For $i = 1 To $iMeasuringPairs * 2 Step 2
+		$aTrackRadios[$i] = GUICtrlCreateRadio($i & "+" & $i +1, 10 + (25 * ($i -1)), 10, 50, 30)
+		GUICtrlSetOnEvent(-1, "_TrackRadioPressed")
+	Next
+	GUICtrlSetState($aTrackRadios[1], $GUI_CHECKED)
+	Local $idButtonOK = GUICtrlCreateButton("OK", 10 + (50 * $iMeasuringPairs), 10, 80, 30, $BS_DEFPUSHBUTTON)
+	GUICtrlSetOnEvent(-1, "_ExitLoop")
 	GUISetState(@SW_SHOW)
-
-	While 1
-		Switch GUIGetMsg()
-			Case $GUI_EVENT_CLOSE
-				Exit
-			Case $idButtonOK
-				ExitLoop
-			Case $idTracks12
-				$iTrackL = 1
-				$iTrackR = 2
-			Case $idTracks34
-				$iTrackL = 3
-				$iTrackR = 4
-			Case $idTracks56
-				$iTrackL = 5
-				$iTrackR = 6
-			Case $idTracks78
-				$iTrackL = 7
-				$iTrackR = 8
-		EndSwitch
+	Opt("GUIOnEventMode", 1)
+	Global $g_bExitLoop = False
+	While Not $g_bExitLoop
+		Sleep(10)
 	WEnd
+	Opt("GUIOnEventMode", 0)
 	GUIDelete()
 EndIf
 ConsoleWrite("L: " & $iTrackL & @CRLF)
@@ -337,3 +319,21 @@ Func _Zeit($iMs, $bComfortView = True) ; from ms to a format: "12h 36m 56s 13f" 
 	EndIf
 	Return $sReturn
 EndFunc   ;==>_Zeit
+
+Func _TrackRadioPressed()
+	Local $iTemp = @GUI_CtrlId
+	$iTemp -= 2
+	$iTemp *= 2
+	$iTrackR = $iTemp
+	$iTemp -= 1
+	$iTrackL = $iTemp
+	ConsoleWrite($iTemp & @CRLF)
+EndFunc
+
+Func _Exit()
+	Exit
+EndFunc
+
+Func _ExitLoop()
+	$g_bExitLoop = True
+EndFunc
