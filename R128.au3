@@ -2,7 +2,7 @@
 #AutoIt3Wrapper_Icon=Icons\peakmeter.ico
 #AutoIt3Wrapper_Res_Comment=Measure loudness with ffmpeg according to R128.
 #AutoIt3Wrapper_Res_Description=Measure loudness with ffmpeg according to R128.
-#AutoIt3Wrapper_Res_Fileversion=1.1.0.18
+#AutoIt3Wrapper_Res_Fileversion=1.1.0.19
 #AutoIt3Wrapper_Res_Fileversion_AutoIncrement=p
 #AutoIt3Wrapper_Res_CompanyName=Norddeutscher Rundfunk
 #AutoIt3Wrapper_Res_LegalCopyright=Conrad Zelck
@@ -167,6 +167,9 @@ Global $Edit = GUICtrlCreateLabel("", 10, 200, 260, 60)
 GUICtrlSetFont(-1, 14, 400, 0, "Courier New")
 Local $g_hLabelRunningTime = GUICtrlCreateLabel("", 440, 200, 150, 30, $SS_CENTER)
 GUICtrlSetFont(-1, 14, 400, 0, "Courier New")
+Local $idButtonOpenTemp = GUICtrlCreateButton("Open %temp%", 280, 190, 150, 30)
+GUICtrlSetFont(-1, 12, 400, 0, "Courier New")
+GUICtrlSetState(-1, $GUI_DISABLE)
 Local $idButtonExport = GUICtrlCreateButton("Export Data", 280, 230, 150, 30)
 GUICtrlSetFont(-1, 12, 400, 0, "Courier New")
 GUICtrlSetState(-1, $GUI_DISABLE)
@@ -198,6 +201,7 @@ Else
 	GUICtrlSetData($Progress2, 100) ; if ffmpeg is done than set progress to 100 - sometimes last StderrRead with 100 is missed
 
 	GUICtrlSetData($Edit, _GetR128($g_sStdErrAll))
+	GUICtrlSetState($idButtonOpenTemp, $GUI_ENABLE)
 	GUICtrlSetState($idButtonExport, $GUI_ENABLE)
 	GUICtrlSetState($idButtonCopy, $GUI_ENABLE)
 EndIf
@@ -207,6 +211,8 @@ While 1
 	Switch GUIGetMsg()
 		Case $GUI_EVENT_CLOSE
 			ExitLoop
+		Case $idButtonOpenTemp
+			ShellExecute(@TempDir)
 		Case $idButtonExport
 			FileWrite(@TempDir & '\' & $sOutputFileWithoutExtension & '.txt', $sFile & @CRLF & @CRLF & GUICtrlRead($Edit) & @CRLF & @CRLF & "measurement time: " & StringRegExpReplace(GUICtrlRead($g_hLabelRunningTime), "\W", ""))
 		Case $idButtonCopy
