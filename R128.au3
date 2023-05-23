@@ -2,7 +2,7 @@
 #AutoIt3Wrapper_Icon=Icons\peakmeter.ico
 #AutoIt3Wrapper_Res_Comment=Measure loudness with ffmpeg according to R128.
 #AutoIt3Wrapper_Res_Description=Measure loudness with ffmpeg according to R128.
-#AutoIt3Wrapper_Res_Fileversion=1.1.0.20
+#AutoIt3Wrapper_Res_Fileversion=1.1.0.21
 #AutoIt3Wrapper_Res_Fileversion_AutoIncrement=p
 #AutoIt3Wrapper_Res_CompanyName=Norddeutscher Rundfunk
 #AutoIt3Wrapper_Res_LegalCopyright=Conrad Zelck
@@ -188,7 +188,7 @@ Switch $iLayout
 	Case $eSTEREO
 		$sCommand = '-i "' & $sFile & '" -map 0:' & $iTrackR / 2 - 1 + $iCounterVideo & ' -c:a pcm_s24le -ar 48000 -y "' & @TempDir & '\' & $sOutputFileWithoutExtension & '.wav"'
 	Case $eMULTI
-		$sCommand = '-i ' & $sFile & ' -af "pan=stereo|c0=c' & $iTrackL - 1 + $iCounterVideo & '|c1=c' & $iTrackR - 1 + $iCounterVideo & '" -c:a pcm_s24le -ar 48000 -y "' & @TempDir & '\' & $sOutputFileWithoutExtension & '.wav"'
+		$sCommand = '-i "' & $sFile & '" -af "pan=stereo|c0=c' & $iTrackL - 1 + $iCounterVideo & '|c1=c' & $iTrackR - 1 + $iCounterVideo & '" -c:a pcm_s24le -ar 48000 -y "' & @TempDir & '\' & $sOutputFileWithoutExtension & '.wav"'
 EndSwitch
 
 ConsoleWrite("Command extract audio: " & $sCommand & @CRLF)
